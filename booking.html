@@ -176,11 +176,12 @@
                                     </label>
                                     <select class="form-select form-select-lg" id="pickup" name="pickup" required>
                                         <option value="">Choose pickup point...</option>
-                                        <option value="Main Gate">Main Gate</option>
-                                        <option value="Library Stop">Library Stop</option>
-                                        <option value="Hostel Area">Hostel Area</option>
-                                        <option value="Administration Block">Administration Block</option>
-                                        <option value="Town Center">Town Center</option>
+                                        <option value="Global Coaches Mbarara Terminal">Global Coaches Mbarara Terminal</option>
+                                        <option value="Katete Stage">Katete Stage</option>
+                                        <option value="Kamukuzi">Kamukuzi</option>
+                                        <option value="Rwizi Stage">Rwizi Stage</option>
+                                        <option value="Kampala Bus Terminal">Kampala Bus Terminal</option>
+                                        <option value="Masaka Stage">Masaka Stage</option>
                                     </select>
                                     <div class="invalid-feedback">Please select a pickup point</div>
                                 </div>
@@ -306,7 +307,7 @@
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     <small class="text-light opacity-50">
-                        Developed by MUST Computer Science Students
+                        Developed by Global Coaches Limited — Cloud Route Team
                     </small>
                 </div>
             </div>
@@ -326,7 +327,7 @@
 
         // Load user info
         document.addEventListener('DOMContentLoaded', () => {
-            const userStr = localStorage.getItem('campusConnectUser');
+            const userStr = localStorage.getItem('cloudRouteUser');
             if (userStr) {
                 try {
                     const user = JSON.parse(userStr);
@@ -515,7 +516,7 @@
                 const formData = new FormData(form);
                 
                 // Add user ID from localStorage
-                const userStr = localStorage.getItem('campusConnectUser');
+                const userStr = localStorage.getItem('cloudRouteUser');
                 if (userStr) {
                     const user = JSON.parse(userStr);
                     formData.append('user_id', user.id);
@@ -529,19 +530,24 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showAlert('bookingAlert', 'Booking confirmed successfully!', 'success');
+                    // Show confirmation modal with QR code
+                    const bookingInfo = data.booking || {
+                        id: 'CR-' + Date.now(),
+                        route: document.getElementById('route').options[document.getElementById('route').selectedIndex].text,
+                        bus: document.getElementById('bus').value,
+                        date: document.getElementById('date').value,
+                        time: document.getElementById('time').options[document.getElementById('time').selectedIndex].text,
+                        seat: selectedSeat,
+                        pickup: document.getElementById('pickup').value
+                    };
+                    showConfirmModal(bookingInfo);
                     
-                    // Reset form after 2 seconds
-                    setTimeout(() => {
-                        form.reset();
-                        form.classList.remove('was-validated');
-                        selectedSeat = null;
-                        document.getElementById('seatMapContainer').innerHTML = 
-                            '<div class="alert alert-info border-0"><i class="fas fa-info-circle me-2"></i>Select bus to view available seats</div>';
-                        
-                        // Redirect to dashboard
-                        window.location.href = 'dashboard.html';
-                    }, 2000);
+                    // Reset form
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    selectedSeat = null;
+                    document.getElementById('seatMapContainer').innerHTML = 
+                        '<div class="alert alert-info border-0"><i class="fas fa-info-circle me-2"></i>Select bus to view available seats</div>';
                 } else {
                     showAlert('bookingAlert', data.message || 'Booking failed. Please try again.', 'danger');
                 }
@@ -570,5 +576,168 @@
             }, 5000);
         }
     </script>
+
+    <!-- Booking Confirmation Modal with QR Code -->
+    <div class="modal fade" id="bookingConfirmModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header text-white py-4" 
+                     style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <div class="text-center w-100">
+                        <i class="fas fa-check-circle fs-1 mb-2 d-block"></i>
+                        <h4 class="modal-title fw-bold">Booking Confirmed!</h4>
+                        <small class="opacity-75">Your ticket has been issued successfully</small>
+                    </div>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Ticket Card -->
+                    <div class="border rounded-3 p-3 mb-3" 
+                         style="background: #f8f9ff; border-color: #667eea !important;">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <small class="text-muted d-block">Booking ID</small>
+                                <strong class="text-primary fs-6" id="modalBookingId">-</strong>
+                            </div>
+                            <span class="badge bg-success px-3 py-2">CONFIRMED</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block"><i class="fas fa-route me-1"></i>Route</small>
+                                <strong class="small" id="modalRoute">-</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block"><i class="fas fa-bus me-1"></i>Bus</small>
+                                <strong class="small" id="modalBus">-</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block"><i class="fas fa-calendar me-1"></i>Date</small>
+                                <strong class="small" id="modalDate">-</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block"><i class="fas fa-clock me-1"></i>Time</small>
+                                <strong class="small" id="modalTime">-</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block"><i class="fas fa-chair me-1"></i>Seat</small>
+                                <strong class="small text-primary" id="modalSeat">-</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block"><i class="fas fa-map-marker-alt me-1"></i>Pickup</small>
+                                <strong class="small" id="modalPickup">-</strong>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <!-- QR Code -->
+                        <div class="text-center mt-3">
+                            <small class="text-muted d-block mb-2">
+                                <i class="fas fa-qrcode me-1"></i> Show this QR code to the conductor
+                            </small>
+                            <canvas id="qrCanvas" width="160" height="160" 
+                                    class="border rounded p-1" style="background:white;"></canvas>
+                            <small class="text-muted d-block mt-1" id="modalBookingIdSmall">-</small>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning border-0 py-2 mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <small>Arrive at your pickup point <strong>10 minutes early</strong>. 
+                        Screenshot or print this ticket.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="printTicket()">
+                        <i class="fas fa-print me-1"></i> Print Ticket
+                    </button>
+                    <button class="btn btn-primary" onclick="closeConfirmModal()">
+                        <i class="fas fa-home me-1"></i> Go to Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Script (no external library needed - pure canvas) -->
+    <script>
+    // Simple QR-like visual generator using canvas (for demo purposes)
+    function drawQRCode(canvas, text) {
+        const ctx = canvas.getContext('2d');
+        const size = canvas.width;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        
+        // Create a simple hash-based pattern from the booking ID
+        let hash = 0;
+        for (let i = 0; i < text.length; i++) {
+            hash = ((hash << 5) - hash) + text.charCodeAt(i);
+            hash |= 0;
+        }
+        
+        const cellSize = size / 21;
+        ctx.fillStyle = '#000000';
+        
+        // Draw position detection patterns (corners)
+        function drawFinder(x, y) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x*cellSize, y*cellSize, 7*cellSize, 7*cellSize);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect((x+1)*cellSize, (y+1)*cellSize, 5*cellSize, 5*cellSize);
+            ctx.fillStyle = '#000';
+            ctx.fillRect((x+2)*cellSize, (y+2)*cellSize, 3*cellSize, 3*cellSize);
+        }
+        drawFinder(0, 0);
+        drawFinder(14, 0);
+        drawFinder(0, 14);
+        
+        // Data modules based on text hash
+        ctx.fillStyle = '#000';
+        for (let row = 0; row < 21; row++) {
+            for (let col = 0; col < 21; col++) {
+                // Skip finder pattern areas
+                if ((row < 8 && col < 8) || (row < 8 && col > 12) || (row > 12 && col < 8)) continue;
+                const seed = (hash ^ (row * 31 + col * 17)) & 1;
+                const charSeed = text.charCodeAt((row + col) % text.length) & 1;
+                if ((seed ^ charSeed) === 1) {
+                    ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+    }
+
+    function showConfirmModal(bookingData) {
+        document.getElementById('modalBookingId').textContent = bookingData.id;
+        document.getElementById('modalBookingIdSmall').textContent = bookingData.id;
+        document.getElementById('modalRoute').textContent = bookingData.route;
+        document.getElementById('modalBus').textContent = 'Bus ' + bookingData.bus;
+        document.getElementById('modalDate').textContent = bookingData.date;
+        document.getElementById('modalTime').textContent = bookingData.time;
+        document.getElementById('modalSeat').textContent = 'Seat ' + bookingData.seat;
+        document.getElementById('modalPickup').textContent = bookingData.pickup;
+        
+        // Draw QR code
+        const canvas = document.getElementById('qrCanvas');
+        drawQRCode(canvas, bookingData.id);
+        
+        const modal = new bootstrap.Modal(document.getElementById('bookingConfirmModal'));
+        modal.show();
+    }
+
+    function closeConfirmModal() {
+        bootstrap.Modal.getInstance(document.getElementById('bookingConfirmModal')).hide();
+        window.location.href = 'dashboard.html';
+    }
+
+    function printTicket() {
+        const ticketContent = document.querySelector('#bookingConfirmModal .modal-body').innerHTML;
+        const printWin = window.open('', '_blank');
+        printWin.document.write(`
+            <html><head><title>Global Coaches Ticket</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+            </head><body class="p-4">${ticketContent}</body></html>
+        `);
+        printWin.document.close();
+        printWin.print();
+    }
+    </script>
+
 </body>
 </html>

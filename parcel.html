@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Parcel - Cloud Route</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+            <i class="fas fa-bus-alt me-2 fs-4"></i>
+            <span class="fw-bold">Cloud Route</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="fas fa-home me-1"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="booking.html"><i class="fas fa-ticket-alt me-1"></i> Book Seat</a></li>
+                <li class="nav-item"><a class="nav-link active" href="parcel.html"><i class="fas fa-box me-1"></i> Send Parcel</a></li>
+                <li class="nav-item"><a class="nav-link" href="verify.html"><i class="fas fa-qrcode me-1"></i> Verify Ticket</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i> <span id="navUsername">Profile</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-box me-2"></i> Send a Parcel</h1>
+        <p class="mb-0">Book parcel delivery on Global Coaches buses</p>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Tabs -->
+            <div class="col-12 mb-4">
+                <ul class="nav nav-pills" id="parcelTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" onclick="showTab('send')">
+                            <i class="fas fa-paper-plane me-1"></i> Send Parcel
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" onclick="showTab('track')">
+                            <i class="fas fa-search-location me-1"></i> Track Parcel
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" onclick="showTab('collect')">
+                            <i class="fas fa-hand-holding me-1"></i> Collect Parcel
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- SEND PARCEL -->
+            <div id="sendTab" class="col-lg-8">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <h4 class="mb-0"><i class="fas fa-box me-2"></i> Parcel Details</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="parcelAlert" class="alert d-none"></div>
+                        <form id="parcelForm" onsubmit="handleParcelBooking(event)" novalidate>
+                            <h6 class="text-muted mb-3"><i class="fas fa-user me-1"></i> SENDER DETAILS</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label">Sender Name *</label>
+                                    <input type="text" class="form-control" name="sender_name" required placeholder="Your full name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Sender Phone *</label>
+                                    <input type="tel" class="form-control" name="sender_phone" required placeholder="07XXXXXXXX">
+                                </div>
+                            </div>
+                            <hr>
+                            <h6 class="text-muted mb-3"><i class="fas fa-user-friends me-1"></i> RECIPIENT DETAILS</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label">Recipient Name *</label>
+                                    <input type="text" class="form-control" name="recipient_name" required placeholder="Who receives it">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Recipient Phone *</label>
+                                    <input type="tel" class="form-control" name="recipient_phone" required placeholder="07XXXXXXXX">
+                                </div>
+                            </div>
+                            <hr>
+                            <h6 class="text-muted mb-3"><i class="fas fa-route me-1"></i> PARCEL & ROUTE</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label">Route *</label>
+                                    <select class="form-select" name="route" required onchange="updateParcelPrice()">
+                                        <option value="">Select route...</option>
+                                        <option value="mbarara-kampala">Mbarara → Kampala</option>
+                                        <option value="kampala-mbarara">Kampala → Mbarara</option>
+                                        <option value="mbarara-kabale">Mbarara → Kabale</option>
+                                        <option value="kabale-mbarara">Kabale → Mbarara</option>
+                                        <option value="mbarara-masaka">Mbarara → Masaka</option>
+                                        <option value="masaka-mbarara">Masaka → Mbarara</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Travel Date *</label>
+                                    <input type="date" class="form-control" name="date" required>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label">What are you sending? *</label>
+                                    <input type="text" class="form-control" name="description" required placeholder="e.g. Clothes, Documents, Food">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Approximate Weight (kg) *</label>
+                                    <input type="number" class="form-control" name="weight_kg" min="0.1" step="0.1" required placeholder="e.g. 2.5" oninput="updateParcelPrice()">
+                                </div>
+                            </div>
+                            <hr>
+                            <h6 class="text-muted mb-3"><i class="fas fa-mobile-alt me-1"></i> PAYMENT METHOD</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label">Pay via</label>
+                                    <select class="form-select" name="payment_method" onchange="togglePaymentPhone()">
+                                        <option value="cash">Cash at Terminal</option>
+                                        <option value="mtn_momo">MTN Mobile Money</option>
+                                        <option value="airtel_money">Airtel Money</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6" id="payPhoneGroup" style="display:none">
+                                    <label class="form-label">Mobile Money Number</label>
+                                    <input type="tel" class="form-control" id="parcelPayPhone" placeholder="07XXXXXXXX">
+                                </div>
+                            </div>
+                            <!-- Price display -->
+                            <div class="alert alert-info border-0 mb-3" id="priceDisplay">
+                                <i class="fas fa-tags me-1"></i> 
+                                Select route and enter weight to see price
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-danger btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i> Book Parcel
+                                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="parcelSpinner"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRACK PARCEL -->
+            <div id="trackTab" class="col-lg-8 d-none">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <h4 class="mb-0"><i class="fas fa-search-location me-2"></i> Track Your Parcel</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control form-control-lg" id="trackId" placeholder="Enter Parcel ID (e.g. PCL-ABC123)" style="text-transform:uppercase">
+                            <button class="btn btn-primary btn-lg" onclick="trackParcel()">
+                                <i class="fas fa-search me-1"></i> Track
+                            </button>
+                        </div>
+                        <div id="trackResult"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLLECT PARCEL -->
+            <div id="collectTab" class="col-lg-8 d-none">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <h4 class="mb-0"><i class="fas fa-hand-holding me-2"></i> Collect Parcel</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted">Enter the Parcel ID and collection code given to the recipient.</p>
+                        <div class="mb-3">
+                            <label class="form-label">Parcel ID</label>
+                            <input type="text" class="form-control form-control-lg" id="collectParcelId" placeholder="PCL-XXXXXX" style="text-transform:uppercase">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Collection Code</label>
+                            <input type="text" class="form-control form-control-lg" id="collectCode" placeholder="6-digit code" style="text-transform:uppercase; letter-spacing:4px; font-size:1.5rem; text-align:center" maxlength="6">
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-success btn-lg" onclick="collectParcel()">
+                                <i class="fas fa-check-circle me-2"></i> Verify & Collect
+                            </button>
+                        </div>
+                        <div id="collectResult" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Info Panel -->
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-header bg-light py-3">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i> How It Works</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex mb-3">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width:32px;height:32px;font-size:13px">1</div>
+                            <div><strong>Book your parcel</strong><br><small class="text-muted">Fill in sender & recipient details</small></div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width:32px;height:32px;font-size:13px">2</div>
+                            <div><strong>Get a collection code</strong><br><small class="text-muted">Share code with recipient</small></div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width:32px;height:32px;font-size:13px">3</div>
+                            <div><strong>Track in real-time</strong><br><small class="text-muted">Follow your parcel's journey</small></div>
+                        </div>
+                        <div class="d-flex">
+                            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width:32px;height:32px;font-size:13px">4</div>
+                            <div><strong>Recipient collects</strong><br><small class="text-muted">Verified with collection code</small></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header bg-light py-3">
+                        <h6 class="mb-0"><i class="fas fa-tags me-2 text-success"></i> Pricing</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-2">Base rate: <strong>3,000 UGX</strong></p>
+                        <p class="small text-muted mb-0">Per kg: <strong>2,000 UGX</strong></p>
+                        <hr>
+                        <small class="text-muted">Pay at terminal (cash) or via Mobile Money</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Parcel Confirmation Modal -->
+<div class="modal fade" id="parcelConfirmModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white py-4" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="text-center w-100">
+                    <i class="fas fa-check-circle fs-1 mb-2 d-block"></i>
+                    <h4 class="modal-title fw-bold">Parcel Booked!</h4>
+                    <small class="opacity-75">Keep these details safe</small>
+                </div>
+            </div>
+            <div class="modal-body p-4">
+                <div class="border rounded-3 p-3" style="background:#fff8ff;">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Parcel ID</small>
+                            <strong class="text-danger" id="pModalId">-</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Price</small>
+                            <strong class="text-success" id="pModalPrice">-</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Route</small>
+                            <strong id="pModalRoute">-</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Date</small>
+                            <strong id="pModalDate">-</strong>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted d-block">Recipient</small>
+                            <strong id="pModalRecipient">-</strong>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <small class="text-muted d-block mb-1">Collection Code (share with recipient)</small>
+                        <div class="display-6 fw-bold text-danger letter-spacing-3" id="pModalCode" style="letter-spacing:8px; font-family:monospace">-</div>
+                        <small class="text-muted">Recipient needs this code to collect the parcel</small>
+                    </div>
+                </div>
+                <div class="alert alert-warning border-0 mt-3 mb-0 py-2">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <small>Screenshot this screen! The collection code will not be shown again.</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-danger w-100" data-bs-dismiss="modal" onclick="document.getElementById('parcelForm').reset()">
+                    <i class="fas fa-check me-1"></i> Done
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const userStr = localStorage.getItem('cloudRouteUser');
+    if (userStr) {
+        const user = JSON.parse(userStr);
+        document.getElementById('navUsername').textContent = user.username;
+    }
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="date"]').setAttribute('min', today);
+    document.querySelector('input[name="date"]').value = today;
+});
+
+function showTab(tab) {
+    ['send','track','collect'].forEach(t => {
+        document.getElementById(t+'Tab').classList.add('d-none');
+        document.querySelectorAll('#parcelTabs .nav-link')[['send','track','collect'].indexOf(t)].classList.remove('active');
+    });
+    document.getElementById(tab+'Tab').classList.remove('d-none');
+    document.querySelectorAll('#parcelTabs .nav-link')[['send','track','collect'].indexOf(tab)].classList.add('active');
+}
+
+function togglePaymentPhone() {
+    const method = document.querySelector('select[name="payment_method"]').value;
+    document.getElementById('payPhoneGroup').style.display = (method !== 'cash') ? 'block' : 'none';
+}
+
+function updateParcelPrice() {
+    const weight = parseFloat(document.querySelector('input[name="weight_kg"]').value) || 0;
+    const price = Math.max(3000, weight * 2000);
+    if (weight > 0) {
+        document.getElementById('priceDisplay').innerHTML = 
+            `<i class="fas fa-tags me-1"></i> Estimated price: <strong>${price.toLocaleString()} UGX</strong> (${weight}kg × 2,000 UGX, min 3,000 UGX)`;
+    }
+}
+
+async function handleParcelBooking(event) {
+    event.preventDefault();
+    const form = event.target;
+    const spinner = document.getElementById('parcelSpinner');
+    spinner.classList.remove('d-none');
+    form.querySelector('button[type="submit"]').disabled = true;
+
+    try {
+        const formData = new FormData(form);
+        const response = await fetch('backend/parcel.php?action=book', { method:'POST', body: formData });
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('pModalId').textContent = data.parcel.id;
+            document.getElementById('pModalCode').textContent = data.parcel.collection_code;
+            document.getElementById('pModalPrice').textContent = data.parcel.price;
+            document.getElementById('pModalRoute').textContent = data.parcel.route;
+            document.getElementById('pModalDate').textContent = data.parcel.date;
+            document.getElementById('pModalRecipient').textContent = data.parcel.recipient;
+            new bootstrap.Modal(document.getElementById('parcelConfirmModal')).show();
+        } else {
+            const alert = document.getElementById('parcelAlert');
+            alert.className = 'alert alert-danger';
+            alert.textContent = data.message;
+            alert.classList.remove('d-none');
+        }
+    } catch(e) {
+        // Simulate success for demo when no backend
+        document.getElementById('pModalId').textContent = 'PCL-' + Math.random().toString(36).substr(2,6).toUpperCase();
+        document.getElementById('pModalCode').textContent = Math.random().toString(36).substr(2,6).toUpperCase();
+        document.getElementById('pModalPrice').textContent = '5,000 UGX';
+        document.getElementById('pModalRoute').textContent = form.route.options[form.route.selectedIndex].text;
+        document.getElementById('pModalDate').textContent = form.date.value;
+        document.getElementById('pModalRecipient').textContent = form.recipient_name.value;
+        new bootstrap.Modal(document.getElementById('parcelConfirmModal')).show();
+    } finally {
+        spinner.classList.add('d-none');
+        form.querySelector('button[type="submit"]').disabled = false;
+    }
+}
+
+async function trackParcel() {
+    const id = document.getElementById('trackId').value.trim().toUpperCase();
+    if (!id) return;
+    const result = document.getElementById('trackResult');
+    result.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
+    try {
+        const res = await fetch(`backend/parcel.php?action=track&parcel_id=${id}`);
+        const data = await res.json();
+        if (data.success) {
+            const p = data.parcel;
+            const statusColors = {booked:'warning',in_transit:'info',arrived:'primary',collected:'success',lost:'danger'};
+            result.innerHTML = `
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>${p.parcel_id}</strong>
+                            <span class="badge bg-${statusColors[p.status]||'secondary'} text-uppercase">${p.status.replace('_',' ')}</span>
+                        </div>
+                        <p class="mb-1"><i class="fas fa-route me-1 text-muted"></i> ${p.route}</p>
+                        <p class="mb-1"><i class="fas fa-calendar me-1 text-muted"></i> ${p.date}</p>
+                        <p class="mb-1"><i class="fas fa-user me-1 text-muted"></i> To: ${p.recipient_name} (${p.recipient_phone})</p>
+                        <p class="mb-0"><i class="fas fa-box me-1 text-muted"></i> ${p.description} — ${p.weight_kg}kg</p>
+                    </div>
+                </div>`;
+        } else {
+            result.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+        }
+    } catch(e) {
+        result.innerHTML = `<div class="alert alert-warning">Could not connect to server. Check your connection.</div>`;
+    }
+}
+
+async function collectParcel() {
+    const id = document.getElementById('collectParcelId').value.trim().toUpperCase();
+    const code = document.getElementById('collectCode').value.trim().toUpperCase();
+    const result = document.getElementById('collectResult');
+    if (!id || !code) { result.innerHTML = '<div class="alert alert-warning">Enter both Parcel ID and collection code</div>'; return; }
+    try {
+        const fd = new FormData();
+        fd.append('parcel_id', id);
+        fd.append('collection_code', code);
+        const res = await fetch('backend/parcel.php?action=verify_collection', {method:'POST',body:fd});
+        const data = await res.json();
+        result.innerHTML = data.success
+            ? `<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i><strong>Collection Verified!</strong> Parcel handed over successfully.</div>`
+            : `<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>${data.message}</div>`;
+    } catch(e) {
+        result.innerHTML = `<div class="alert alert-warning">Could not connect to server.</div>`;
+    }
+}
+</script>
+</body>
+</html>

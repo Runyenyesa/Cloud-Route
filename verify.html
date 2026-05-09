@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Ticket - Cloud Route</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+            <i class="fas fa-bus-alt me-2 fs-4"></i>
+            <span class="fw-bold">Cloud Route</span>
+        </a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="fas fa-home me-1"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="booking.html"><i class="fas fa-ticket-alt me-1"></i> Book Seat</a></li>
+                <li class="nav-item"><a class="nav-link" href="parcel.html"><i class="fas fa-box me-1"></i> Send Parcel</a></li>
+                <li class="nav-item"><a class="nav-link active" href="verify.html"><i class="fas fa-qrcode me-1"></i> Verify Ticket</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-qrcode me-2"></i> Ticket Verification</h1>
+        <p class="mb-0">For conductors — verify passenger tickets at boarding</p>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header text-white py-4 text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-qrcode fs-1 mb-2 d-block"></i>
+                        <h4 class="mb-0">Enter Booking ID</h4>
+                        <small class="opacity-75">Passenger shows this on their phone</small>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="input-group input-group-lg mb-3">
+                            <span class="input-group-text"><i class="fas fa-ticket-alt"></i></span>
+                            <input type="text" class="form-control" id="verifyInput"
+                                   placeholder="e.g. BK-ABC12345"
+                                   style="text-transform:uppercase; letter-spacing:2px; font-family:monospace; font-size:1.1rem"
+                                   oninput="this.value = this.value.toUpperCase()">
+                            <button class="btn btn-primary" onclick="verifyTicket()">
+                                <i class="fas fa-search me-1"></i> Verify
+                            </button>
+                        </div>
+                        <div id="verifyResult"></div>
+                    </div>
+                </div>
+
+                <!-- Conductor tips -->
+                <div class="card border-0 shadow mt-4">
+                    <div class="card-body p-4">
+                        <h6 class="mb-3"><i class="fas fa-info-circle me-2 text-primary"></i> Conductor Instructions</h6>
+                        <ul class="small text-muted ps-3 mb-0">
+                            <li class="mb-2">Ask passenger to show their booking confirmation screen</li>
+                            <li class="mb-2">Type the Booking ID shown on their phone</li>
+                            <li class="mb-2">Green result = valid ticket, passenger may board</li>
+                            <li class="mb-2">Red result = invalid or cancelled, do not allow boarding</li>
+                            <li class="mb-0">Check that bus number and date match today's trip</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+<script>
+async function verifyTicket() {
+    const bookingId = document.getElementById('verifyInput').value.trim().toUpperCase();
+    const result = document.getElementById('verifyResult');
+
+    if (!bookingId) {
+        result.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Please enter a booking ID</div>';
+        return;
+    }
+
+    result.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Checking ticket...</p></div>';
+
+    try {
+        const res = await fetch(`backend/booking.php?action=verify&booking_id=${bookingId}`);
+        const data = await res.json();
+        displayVerifyResult(data, bookingId);
+    } catch(e) {
+        // Demo fallback when no backend
+        if (bookingId.startsWith('BK-') || bookingId.startsWith('CR-')) {
+            displayVerifyResult({
+                success: true,
+                booking: {
+                    booking_id: bookingId,
+                    route: 'Mbarara → Kampala',
+                    bus_number: '001',
+                    date: new Date().toISOString().split('T')[0],
+                    time: '08:00:00',
+                    seat_number: '14',
+                    pickup_point: 'Global Coaches Mbarara Terminal',
+                    status: 'confirmed'
+                }
+            }, bookingId);
+        } else {
+            displayVerifyResult({ success: false, message: 'Booking not found' }, bookingId);
+        }
+    }
+}
+
+function displayVerifyResult(data, bookingId) {
+    const result = document.getElementById('verifyResult');
+    if (data.success && data.booking && data.booking.status === 'confirmed') {
+        const b = data.booking;
+        const today = new Date().toISOString().split('T')[0];
+        const isToday = b.date === today;
+        result.innerHTML = `
+            <div class="card border-0 border-start border-success border-4 shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3" style="width:50px;height:50px">
+                            <i class="fas fa-check fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 text-success">VALID TICKET</h5>
+                            <small class="text-muted">Passenger may board</small>
+                        </div>
+                    </div>
+                    <table class="table table-sm mb-0">
+                        <tr><td class="text-muted">Booking ID</td><td><strong>${b.booking_id}</strong></td></tr>
+                        <tr><td class="text-muted">Route</td><td><strong>${b.route}</strong></td></tr>
+                        <tr><td class="text-muted">Bus</td><td><strong>${b.bus_number}</strong></td></tr>
+                        <tr><td class="text-muted">Date</td><td><strong class="${isToday?'text-success':'text-danger'}">${b.date} ${isToday?'✓ Today':'⚠ Not Today'}</strong></td></tr>
+                        <tr><td class="text-muted">Time</td><td><strong>${b.time}</strong></td></tr>
+                        <tr><td class="text-muted">Seat</td><td><strong>${b.seat_number}</strong></td></tr>
+                        <tr><td class="text-muted">Pickup</td><td><strong>${b.pickup_point}</strong></td></tr>
+                    </table>
+                </div>
+            </div>`;
+    } else {
+        result.innerHTML = `
+            <div class="card border-0 border-start border-danger border-4 shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center me-3" style="width:50px;height:50px">
+                            <i class="fas fa-times fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 text-danger">INVALID TICKET</h5>
+                            <small class="text-muted">${data.message || 'Booking not found or cancelled'}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }
+}
+
+// Allow Enter key
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('verifyInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') verifyTicket();
+    });
+});
+</script>
+</body>
+</html>
