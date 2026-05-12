@@ -10,10 +10,10 @@ class Database {
     private static $instance = null;
     
     // Database connection properties
-    private $host = 'localhost';
-    private $username = 'root';
-    private $password = '';
-    private $database = 'cloud_route';
+   private $host = 'cloudroute-db.cfy2k6mmsm8a.eu-west-1.rds.amazonaws.com';
+private $username = 'admin';
+private $password = 'CloudRoute2026!';
+private $database = 'cloud_route';
     private $connection;
     
     /**
